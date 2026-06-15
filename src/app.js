@@ -146,7 +146,7 @@ function fit(){
   const pane=$("artstage"), pw=pane.clientWidth, ph=pane.clientHeight;
   const narrow=pw<720;
   const baseFS = narrow
-    ? Math.min(pw/(COLS*CHAR_RATIO), ph/ROWS)*0.85   // phone: CONTAIN — whole painting, comfortable size
+    ? Math.min(pw/(COLS*CHAR_RATIO), ph/ROWS)*0.99   // phone: CONTAIN, filled to the screen width (no crop)
     : Math.max(pw/(COLS*CHAR_RATIO), ph/ROWS);       // desktop: COVER — full bleed
   FS=Math.max(narrow?2.6:4, baseFS*(narrow?1:view.scale)); CELLW=FS*CHAR_RATIO; CELLH=FS;
   const gw=COLS*CELLW, gh=ROWS*CELLH, dpr=window.devicePixelRatio||1;
@@ -154,7 +154,7 @@ function fit(){
   elCanvas.style.width=pw+"px"; elCanvas.style.height=ph+"px";
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.font=`${FS}px "Cascadia Code", ui-monospace, monospace`; ctx.textBaseline="top";
-  if(narrow){ OX=(pw-gw)/2; OY=(ph-gh)*0.40; }  // phone: whole painting, centered (a touch above center)
+  if(narrow){ OX=(pw-gw)/2; OY=(ph-gh)*0.15; }  // phone: full width, pushed toward the top (less top void)
   else { OX=(pw-gw)+view.ox; OY=0+view.oy; }      // desktop: right/top-aligned + baked offset
   redrawFull(displayId);
 }
