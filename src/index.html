@@ -188,20 +188,21 @@
   /* ===== UPGRADED COMPONENTS ===== */
   /* schedule status log */
   .log{position:relative}
-  .log .row{display:grid;grid-template-columns:24px 158px 1fr;gap:14px;align-items:start;
+  .log .row{display:grid;grid-template-columns:22px 158px 1fr;gap:14px;align-items:start;
     position:relative;padding:15px 0;border-bottom:1px solid #141a1c}
   .log .row:last-child{border-bottom:none}
   .log .row.done{opacity:.55}
   /* status dot — replaces the [✓]/[►]/[ ] brackets, matches the dot/icon language elsewhere */
   .log .mark{justify-self:center;align-self:start;margin-top:5px;width:10px;height:10px;
-    border-radius:50%;border:1.5px solid #36403b;background:transparent}
+    border-radius:50%;border:1.5px solid #36403b;background:var(--bg);
+    position:relative;z-index:1}            /* sits ABOVE the connector so it's never clipped */
   .log .row.done .mark{background:var(--dim);border-color:var(--dim)}
   .log .row.active .mark{border-color:var(--accent);background:var(--accent);
     box-shadow:0 0 0 4px rgba(220,213,195,.13)}
   .log .row.soon .mark{border-color:var(--accent)}
   /* timeline connector running through the dots */
-  .log .row:not(:last-child)::before{content:"";position:absolute;left:11px;top:20px;bottom:-25px;
-    width:1.5px;background:#1a2124}
+  .log .row:not(:last-child)::before{content:"";position:absolute;left:10px;top:25px;bottom:-25px;
+    width:2px;background:#222a2d}            /* dot-center to dot-center, behind the dots (z-index) */
   .log .date{font-family:"Cascadia Code",monospace;color:var(--dim);font-size:13.5px;
     padding-top:3px;letter-spacing:.01em;white-space:nowrap}
   .log .row.active .date,.log .row.soon .date{color:var(--hi)}

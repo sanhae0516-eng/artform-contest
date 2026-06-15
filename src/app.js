@@ -727,9 +727,8 @@ async function main(){
   buildChars(list); measureRatio(); buildOrder(); fit(); preloadColors(list);
   addEventListener("resize", fit); addPointer(); updateToggleUI(); setupSections();
   const REDUCE = window.matchMedia && matchMedia("(prefers-reduced-motion:reduce)").matches;
-  if(!REDUCE) lockScroll();                 // lock scroll until 1st painting is built (motion users)
-  setTimeout(releaseIntro, 4000);           // safety: never trap the user if the build is slow
-  addEventListener("touchstart", releaseIntro, {once:true, passive:true});  // tap anywhere to skip on touch
+  if(!REDUCE) lockScroll();                 // lock scroll (mobile + desktop) until the 1st painting is built
+  setTimeout(releaseIntro, 20000);          // hang-guard only; normal unlock fires when the build finishes (loadbar→100%)
   if(REDUCE) releaseIntro();                // reduced-motion: start unlocked
   redrawFull(null); await sleep(350);      // brief empty terminal
   typeHero();
