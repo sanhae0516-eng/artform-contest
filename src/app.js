@@ -692,10 +692,12 @@ function setupSections(){
   const an=$("applyNote");
   if(an && APPLY.note){ an.textContent=APPLY.note; an.classList.add("show"); }
   // sticky bar + scroll cue
+  document.querySelectorAll(".mapblock").forEach(mb=>            // 터치: 첫 탭에 지도 활성(스크롤 트랩 방지)
+    mb.addEventListener("click",()=>mb.classList.add("live"),{once:true}));
   const bar=$("bar"), cue=$("scrollcue");
   addEventListener("scroll",()=>{
     bar && bar.classList.toggle("show", scrollY>innerHeight*0.7);
-    if(cue) cue.style.opacity = scrollY>60 ? "0" : "1";
+    if(cue) cue.style.opacity = scrollY>120 ? "0" : "1";
   },{passive:true});
   // reveal + decode section titles on entry
   if(!("IntersectionObserver" in window)){

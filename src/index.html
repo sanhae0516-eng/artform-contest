@@ -323,7 +323,7 @@
     .prize-row{grid-template-columns:repeat(2,1fr)}
     .fields{grid-template-columns:1fr}
     .steps3{grid-template-columns:1fr}
-    .steps3 li:not(:last-child)::after{content:"↓";right:auto;left:50%;top:auto;bottom:-13px;transform:translateX(-50%)}
+    .steps3 li:not(:last-child)::after{content:"↓";right:auto;left:50%;top:auto;bottom:-13px;transform:translateX(-50%);background:var(--bg);padding:2px 6px;line-height:1}
   }
   @media (max-width:900px){
     #stage{grid-template-columns:1fr;grid-template-rows:30% 70%}
@@ -340,11 +340,13 @@
     .themes{grid-template-columns:1fr}
     .galleryStrip{grid-template-columns:repeat(2,1fr)}
     .steps3{grid-template-columns:1fr}
-    .steps3 li:not(:last-child)::after{content:"↓";right:auto;left:50%;top:auto;bottom:-13px;transform:translateX(-50%)}
+    .steps3 li:not(:last-child)::after{content:"↓";right:auto;left:50%;top:auto;bottom:-13px;transform:translateX(-50%);background:var(--bg);padding:2px 6px;line-height:1}
     .spec .srow{grid-template-columns:1fr;gap:6px}
+    .spec .sk{color:var(--accent)}
     .fields{grid-template-columns:1fr}
     .card,.steps3 li,.fld,.sbox{padding:18px}
-    .prize-feat{flex-direction:column;align-items:flex-start;padding:22px}
+    .card .name{font-size:19px}
+    .prize-feat{flex-direction:column;align-items:flex-start;padding:22px;border-left:3px solid var(--accent)}
     .prize-feat .amt{text-align:left;margin-top:10px}
     .subhead{font-size:14px;color:var(--accent);letter-spacing:.04em}
     #scrim{height:50%}
@@ -362,6 +364,7 @@
     .applybtns .btn{width:100%}
     footer .wrap{flex-direction:column;align-items:flex-start;gap:14px}
     footer{padding-bottom:max(56px,env(safe-area-inset-bottom))}
+    .mapblock{height:200px}
     section{padding:54px 16px}
   }
   @media (max-width:430px){ #heroCta{flex-wrap:wrap} }
@@ -376,6 +379,8 @@
     #artstage{cursor:default}
     .btn:hover{transform:none}
     .card:hover{transform:none;border-color:#1a2124}
+    .mapblock iframe{pointer-events:none}        /* avoid one-finger scroll trap */
+    .mapblock.live iframe{pointer-events:auto}   /* tap the map to activate */
   }
   @media (prefers-reduced-motion:reduce){
     .cursor,#heroTitle .hc,#scrollcue,#heroCta .pb{animation:none}
