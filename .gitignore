@@ -1,2 +1,3 @@
 tools/test.jpg
-tools/_*.img
+tools/__pycache__/
+tools/_*
