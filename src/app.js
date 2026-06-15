@@ -146,7 +146,7 @@ function fit(){
   const pane=$("artstage"), pw=pane.clientWidth, ph=pane.clientHeight;
   const narrow=pw<720;
   const baseFS = narrow
-    ? Math.min(pw/(COLS*CHAR_RATIO), ph/ROWS)*0.92   // phone: CONTAIN within the art row (code fills the top)
+    ? Math.min(pw/(COLS*CHAR_RATIO), ph/ROWS)*0.99   // phone: CONTAIN, full width (painting is the main element)
     : Math.max(pw/(COLS*CHAR_RATIO), ph/ROWS);       // desktop: COVER — full bleed
   FS=Math.max(narrow?2.6:4, baseFS*(narrow?1:view.scale)); CELLW=FS*CHAR_RATIO; CELLH=FS;
   const gw=COLS*CELLW, gh=ROWS*CELLH, dpr=window.devicePixelRatio||1;
