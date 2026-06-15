@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>제2회 2026 대한민국 AI 창조공모대전</title>
+<meta name="description" content="제2회 2026 대한민국 AI 창조공모대전 — AI 이미지·영상 공모. 주제 ‘우리가 꿈꾸는 세상’. 접수 2026.11.25–11.29. 주최 사단법인 한국창조미술협회.">
+<meta property="og:title" content="제2회 2026 대한민국 AI 창조공모대전">
+<meta property="og:description" content="AI 이미지·영상 공모 · 주제 ‘우리가 꿈꾸는 세상’ · 접수 2026.11.25–11.29">
+<meta property="og:type" content="website">
+<meta property="og:image" content="og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23050607'/><text x='16' y='23' font-size='20' text-anchor='middle' fill='%23ece4d2' font-family='monospace'>%23</text></svg>">
+<link rel="stylesheet" as="style" crossorigin
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --bg:#050607;
+    --ink:#cdc8b8;          /* code text (mono, warm bone) */
+    --dim:#5f6b66;          /* comments / line numbers */
+    --art:#ece4d2;          /* painting glyphs */
+    --accent:#dcd5c3;
+    --hi:#ece4d2;            /* emphasis = brighter bone (hierarchy by brightness, not hue) */
+    --gold:#d8d1bf;          /* calmed (was flashy gold) */
+    --kfont:"Pretendard","Pretendard Variable","Malgun Gothic",
+            "Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  html,body{margin:0;background:var(--bg)}
+  body{overflow-x:hidden;color:var(--ink);-webkit-font-smoothing:antialiased;
+    font-family:"Cascadia Code","JetBrains Mono","Fira Code","D2Coding",
+                ui-monospace,Consolas,"Courier New",monospace;}
+
+  /* ===== HERO (100vh) ===== */
+  #app{position:relative;height:100vh;height:100svh;width:100%;overflow:hidden}
+  #stage{position:absolute;inset:0;display:grid;grid-template-columns:42% 58%}
+  .pane{position:relative;min-width:0;min-height:0;overflow:hidden}
+  #codepane{display:flex;align-items:flex-start;padding:18px 4px 200px 0;overflow:hidden}
+  #gutter{flex:0 0 auto;text-align:right;color:var(--dim);opacity:.5;
+    padding:0 10px 0 12px;white-space:pre;font-size:11px;line-height:1.5;user-select:none}
+  #code{flex:1 1 auto;white-space:pre;line-height:1.5;font-size:11px}
+  #artstage{position:absolute;inset:0;overflow:hidden;cursor:crosshair}
+  #art{display:block}
+
+  #tip{position:fixed;z-index:70;pointer-events:none;opacity:0;transition:opacity .1s;
+    font-family:"Cascadia Code",ui-monospace,monospace;font-size:11px;line-height:1.55;
+    white-space:pre;color:var(--ink);background:rgba(7,10,11,.93);border:1px solid #1c2329;
+    border-radius:7px;padding:9px 11px;box-shadow:0 8px 26px rgba(0,0,0,.55)}
+  #tip .k{color:#7f8b85}#tip .v{color:#c8e6c4}#tip .n{color:var(--gold)}#tip .hex{font-weight:600}
+  #tip.warn{font-family:var(--kfont);font-size:12.5px;font-weight:700;color:#ff8585;
+    border-color:#5b2626;background:rgba(24,9,10,.96)}
+  #tip.warn .sub{color:#c98a8a;font-size:11px;font-weight:400}
+  #codebox{position:fixed;z-index:65;pointer-events:none;opacity:0;transition:opacity .08s;
+    border:1px solid var(--accent);border-radius:3px;background:rgba(220,213,195,.07)}
+  #modeToggle{position:absolute;top:12px;right:14px;font-size:10.5px;letter-spacing:.12em;
+    color:var(--dim);cursor:pointer;user-select:none;z-index:35;padding:4px 9px;
+    border:1px solid #1b1f23;border-radius:999px;background:rgba(8,10,12,.6)}
+  #modeToggle span.active{color:var(--accent)} #modeToggle .sep{opacity:.4;margin:0 1px}
+  #scrim{position:absolute;left:0;right:0;bottom:0;height:56%;z-index:24;pointer-events:none;
+    background:linear-gradient(to top, rgba(0,0,0,.92), rgba(0,0,0,.55) 38%, rgba(0,0,0,.12) 78%, transparent)}
+  #hero{position:absolute;left:0;bottom:0;z-index:30;pointer-events:auto;
+    padding:0 0 56px 46px;max-width:84%;font-family:var(--kfont)}
+  #heroTag{font-family:var(--kfont);font-weight:800;font-size:clamp(15px,1.5vw,18px);letter-spacing:.18em;
+    color:var(--hi);margin-bottom:12px;min-height:20px;text-shadow:0 2px 14px rgba(0,0,0,.9)}
+  #heroTitle{font-family:var(--kfont);font-weight:800;font-size:clamp(26px,3.6vw,50px);
+    line-height:1.1;color:#f1ebdb;letter-spacing:-.012em;text-shadow:0 2px 20px rgba(0,0,0,.6)}
+  #heroTitle .hc{display:inline-block;width:.5em;height:1.05em;background:#f1ebdb;
+    transform:translateY(.14em);margin-left:5px;animation:blink 1s steps(1) infinite}
+  /* scroll locked until the first painting finishes building */
+  html.locked,html.locked body{overflow:hidden}
+  #scrollcue{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:40;opacity:0;
+    color:var(--dim);font-size:11px;letter-spacing:.22em;text-decoration:none;transition:opacity .5s;
+    display:flex;flex-direction:column;align-items:center;gap:5px;animation:bob 1.9s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,6px)}}
+
+  .t-prompt,.t-path,.t-cmd,.t-kw,.t-type,.t-str,.t-num,.t-pre,.t-fn{color:var(--ink)}
+  .t-com{color:var(--dim);font-style:italic}
+  .cursor{display:inline-block;width:.55em;height:1.05em;background:var(--ink);
+    margin-left:1px;transform:translateY(2px);animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  /* ===== STICKY BAR ===== */
+  #bar{position:fixed;top:0;left:0;right:0;z-index:80;display:flex;align-items:center;gap:14px;
+    padding:10px 22px;background:rgba(7,9,10,.86);backdrop-filter:blur(6px);
+    border-bottom:1px solid #141a1c;transform:translateY(-102%);transition:transform .35s ease}
+  #bar.show{transform:none}
+  #bar .brand{font-family:var(--kfont);color:var(--accent);letter-spacing:.16em;font-weight:600;font-size:13px}
+  #bar .dday{margin-left:auto;font-family:"Cascadia Code",monospace;font-size:12.5px;color:var(--ink)}
+  #bar .dday b{color:var(--hi);font-weight:600}
+
+  /* ===== BUTTONS ===== */
+  .btn{font-family:var(--kfont);font-weight:700;text-decoration:none;display:inline-block;cursor:pointer;
+    background:var(--accent);color:#0a0c0d;padding:10px 20px;border-radius:9px;font-size:14px;
+    transition:transform .12s,filter .12s}
+  .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  .btn.sm{padding:7px 14px;font-size:13px}
+  .btn.ghost{background:transparent;color:var(--accent);border:1px solid #2a3a36}
+  .ic{width:1em;height:1em;vertical-align:-.12em;flex:0 0 auto}
+  .btn .ic{margin-left:7px}
+  .btn.disabled{cursor:not-allowed;filter:grayscale(.5) brightness(.62)}
+  .btn.disabled:hover{transform:none;filter:grayscale(.5) brightness(.62)}
+  .apply.disabled{cursor:not-allowed}
+  footer .apply.disabled{color:var(--dim);text-decoration:none}
+  .ic.im{margin-right:7px;color:var(--dim);vertical-align:-.22em}
+
+  /* ===== SECTIONS ===== */
+  main{position:relative;z-index:2;background:var(--bg)}
+  section{padding:96px 24px;border-top:1px solid #10161a}
+  .wrap{max-width:1040px;margin:0 auto}
+  .sec-label{font-family:"Cascadia Code",monospace;font-size:12px;color:var(--dim);margin-bottom:14px;min-height:15px}
+  .sec-title{font-family:var(--kfont);font-weight:800;color:#f1ebdb;
+    font-size:clamp(24px,3vw,40px);line-height:1.15;margin:0 0 22px}
+  .lead{font-family:var(--kfont);color:#cfc8b6;font-size:clamp(15px,1.5vw,19px);
+    line-height:1.75;max-width:62ch}
+  .lead .em{color:#f1ebdb;font-weight:700}
+
+  /* ===== Korean line-breaking: break at word/phrase, not mid-syllable ===== */
+  #heroTitle,.sec-title,.lead,.subhead,.steps3 b,.steps3 .t,.spec .sk,.spec .sv,
+  .checklist li,.deflist li,.log .lab,.card .name,.card .amt,.prize-feat .name,
+  .prize-feat .extra,.thumb .cap,#bar .brand,footer{
+    word-break:keep-all; overflow-wrap:break-word}
+  #heroTitle,.sec-title{text-wrap:balance}
+  .lead{text-wrap:pretty}
+  /* definition-style list (대주제 / 지원대상) — › marker, not ✓ */
+  .deflist{list-style:none;padding:0;margin:0;display:grid;gap:11px}
+  .deflist li{font-family:var(--kfont);color:#cfc8b6;font-size:15px;line-height:1.65;
+    padding-left:22px;position:relative}
+  .deflist li::before{content:"›";position:absolute;left:0;top:0;color:var(--dim);
+    font-family:"Cascadia Code",monospace}
+
+  .codeblock{margin:8px 0 0;border:1px solid #1a2124;border-radius:10px;overflow:hidden;background:#070a0b}
+  .codeblock pre{margin:0;padding:16px 18px;font-family:"Cascadia Code",monospace;font-size:13px;
+    line-height:1.75;color:var(--ink);white-space:pre-wrap}
+  .codeblock .c{color:var(--dim)} .codeblock .s{color:var(--ink)} .codeblock .n{color:var(--accent)}
+  .codeblock .tt{color:var(--dim);font-size:12px;margin-left:8px}
+  /* fake-terminal submit session */
+  .codeblock.term pre{min-height:236px}
+  #termBody{white-space:pre-wrap}
+  #termBody .g{color:var(--ink)} #termBody .cy{color:var(--dim)}
+  #termBody .ok{color:var(--hi)} #termBody .ar{color:var(--dim)} #termBody .n{color:var(--accent)}
+  #termBody .dim{color:var(--dim)} #termBody b{color:var(--accent);font-weight:600}
+  #termBody .cur{display:inline-block;width:.55em;height:1.05em;background:var(--ink);
+    transform:translateY(2px);animation:blink 1s steps(1) infinite}
+  /* friendly submit: subhead + 3 steps + spec table + checklist */
+  .subhead{font-family:"Cascadia Code",monospace;color:var(--dim);font-size:13px;margin:38px 0 14px}
+  .subhead::before{content:"// "}
+  .steps3{list-style:none;padding:0;margin:8px 0 0;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .steps3 li{position:relative;border:1px solid #1a2124;border-radius:12px;padding:22px;
+    background:rgba(255,255,255,.012);display:flex;gap:14px;align-items:flex-start}
+  .steps3 .num{flex:0 0 auto;width:28px;height:28px;border-radius:50%;border:1px solid #2a3a36;
+    color:var(--hi);font-family:"Cascadia Code",monospace;font-size:13px;
+    display:flex;align-items:center;justify-content:center}
+  .steps3 b{font-family:var(--kfont);color:var(--hi);font-weight:700;font-size:16px;
+    display:flex;align-items:center;gap:7px;margin-bottom:6px}
+  .steps3 b .ic{color:var(--accent);width:17px;height:17px}
+  .steps3 .t{font-family:var(--kfont);color:#b4ae9e;font-size:14px;line-height:1.6}
+  .steps3 li:not(:last-child)::after{content:"→";position:absolute;right:-12px;top:50%;
+    transform:translateY(-50%);color:var(--dim);font-family:"Cascadia Code",monospace;z-index:2}
+  .spec{border:1px solid #1a2124;border-radius:12px;overflow:hidden}
+  .spec .srow{display:grid;grid-template-columns:130px 1fr;gap:16px;padding:14px 20px;border-bottom:1px solid #141a1c}
+  .spec .srow:last-child{border-bottom:none}
+  .spec .sk{font-family:"Cascadia Code",monospace;color:var(--dim);font-size:14px}
+  .spec .sv{font-family:var(--kfont);color:#cfc8b6;font-size:15px}
+  .checklist{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .checklist li{font-family:var(--kfont);color:#cfc8b6;font-size:15px;padding-left:28px;position:relative}
+  .checklist li::before{content:"✓";position:absolute;left:0;top:0;color:var(--hi);font-family:"Cascadia Code",monospace}
+
+  #apply{text-align:center}
+  #apply .deadline{font-family:"Cascadia Code",monospace;color:var(--dim);margin:6px 0 26px}
+  .applybtns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  #applyNote{display:none;margin-top:18px;font-family:var(--kfont);color:#ff8585;font-size:14px;font-weight:600}
+  #applyNote.show{display:block}
+
+  footer{padding:42px 24px 64px;border-top:1px solid #10161a;color:var(--dim);font-size:13px}
+  footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+  footer a{color:var(--ink);text-decoration:none} footer a:hover{color:var(--accent)}
+  footer .org{font-family:var(--kfont)}
+
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ===== UPGRADED COMPONENTS ===== */
+  /* schedule status log */
+  .log{position:relative}
+  .log .row{display:grid;grid-template-columns:24px 158px 1fr;gap:14px;align-items:start;
+    position:relative;padding:15px 0;border-bottom:1px solid #141a1c}
+  .log .row:last-child{border-bottom:none}
+  .log .row.done{opacity:.55}
+  /* status dot — replaces the [✓]/[►]/[ ] brackets, matches the dot/icon language elsewhere */
+  .log .mark{justify-self:center;align-self:start;margin-top:5px;width:10px;height:10px;
+    border-radius:50%;border:1.5px solid #36403b;background:transparent}
+  .log .row.done .mark{background:var(--dim);border-color:var(--dim)}
+  .log .row.active .mark{border-color:var(--accent);background:var(--accent);
+    box-shadow:0 0 0 4px rgba(220,213,195,.13)}
+  .log .row.soon .mark{border-color:var(--accent)}
+  /* timeline connector running through the dots */
+  .log .row:not(:last-child)::before{content:"";position:absolute;left:11px;top:20px;bottom:-25px;
+    width:1.5px;background:#1a2124}
+  .log .date{font-family:"Cascadia Code",monospace;color:var(--dim);font-size:13.5px;
+    padding-top:3px;letter-spacing:.01em}
+  .log .row.active .date,.log .row.soon .date{color:var(--hi)}
+  .log .lab{font-family:var(--kfont);color:#cfc8b6;font-size:16px;line-height:1.45}
+  .log .row.active .lab{color:var(--hi);font-weight:700}
+  .log .lab .nt{display:block;color:var(--dim);font-size:13px;margin-top:4px;font-weight:400;line-height:1.5}
+  .log .pbar{height:5px;max-width:300px;background:#171d20;border-radius:3px;overflow:hidden;margin-top:11px}
+  .log .pbar i{display:block;height:100%;background:var(--accent)}
+  .log .dd{color:var(--accent);font-family:"Cascadia Code",monospace;font-size:13px;margin-top:8px}
+  .log .row.soon .lab{color:#cfc8b6}
+  /* schedule = 일정(좌) / 장소(우) */
+  .sched-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;margin-top:8px}
+  .sbox{border:1px solid #1a2124;border-radius:12px;background:rgba(255,255,255,.012);padding:22px 24px}
+  .mapblock{border-radius:9px;overflow:hidden;height:240px;background:#0a0d0e}
+  .mapblock iframe{width:100%;height:100%;border:0;display:block;filter:grayscale(.35) brightness(.82) contrast(1.05)}
+  .addr{font-family:var(--kfont);color:#cfc8b6;font-size:14.5px;line-height:1.75;
+    margin-top:16px;padding-top:16px;border-top:1px solid #141a1c}
+  .addr b{color:var(--hi)}
+  .addr a{display:inline-block;margin-top:8px;color:var(--accent);text-decoration:none;
+    font-family:"Cascadia Code",monospace;font-size:13px}
+  .addr a:hover{filter:brightness(1.12)}
+
+  /* prizes */
+  .pool{font-family:"Cascadia Code",monospace;color:var(--ink);font-size:16px;margin-bottom:20px}
+  .pool b{color:var(--hi)}
+  .prize-feat{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;
+    border:1px solid #242a28;border-radius:14px;padding:26px;margin-bottom:16px;
+    background:linear-gradient(180deg,#0d0f10,#0a0b0c)}
+  .prize-feat .rank{font-family:"Cascadia Code",monospace;color:var(--dim);font-size:12px;letter-spacing:.12em;display:flex;align-items:center;gap:7px}
+  .prize-feat .name{font-family:var(--kfont);font-weight:800;color:var(--hi);font-size:34px;margin:6px 0 4px}
+  .prize-feat .extra{font-family:var(--kfont);color:#b4ae9e;font-size:14px}
+  .prize-feat .amt{font-family:"Cascadia Code",monospace;color:var(--accent);font-size:18px;text-align:right}
+  .prize-feat .amt .cnt{display:block;color:var(--dim);font-size:14px;margin-top:4px}
+  .prize-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+  .card{border:1px solid #1a2124;border-radius:12px;padding:22px;background:rgba(255,255,255,.012);
+    transition:transform .15s,border-color .15s}
+  .card:hover{transform:translateY(-3px);border-color:#33423c}
+  .card .rank{font-family:"Cascadia Code",monospace;color:var(--dim);font-size:12px;letter-spacing:.1em}
+  .card .name{font-family:var(--kfont);font-weight:800;color:var(--hi);font-size:21px;margin:8px 0 6px}
+  .card .amt{font-family:"Cascadia Code",monospace;color:var(--accent);font-size:15px}
+  .card .cnt{color:var(--dim);font-size:13px;margin-top:8px;font-family:var(--kfont)}
+
+  /* gallery strip */
+  .galleryStrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:14px}
+  .thumb{border:1px solid #1a2124;border-radius:10px;background:#070a0b;padding:10px;overflow:hidden}
+  .thumb pre{margin:0;white-space:pre;color:var(--art);line-height:1;overflow:hidden;height:200px;
+    font-family:"Cascadia Code",monospace;filter:brightness(.82);transition:filter .25s}
+  .thumb:hover pre{filter:brightness(1.18)}
+  .thumb .cap{font-family:var(--kfont);color:#cfc8b6;font-size:14px;margin-top:10px}
+  .thumb .cap .fn{display:block;color:var(--dim);font-size:11px;font-family:"Cascadia Code",monospace;margin-top:2px}
+
+  /* countdown */
+  #countdown{font-family:"Cascadia Code",monospace;color:var(--hi);
+    font-size:clamp(20px,2.6vw,32px);margin:8px 0 22px;letter-spacing:.03em}
+  #countdown .u{color:var(--dim);font-size:.5em;margin:0 9px 0 3px}
+
+  /* section index rail */
+  #rail{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:60;
+    display:flex;flex-direction:column;gap:13px;font-family:"Cascadia Code",monospace;font-size:11px}
+  #rail.pre{pointer-events:none}                     /* hidden until first build done */
+  #rail a{color:var(--dim);text-decoration:none;display:flex;align-items:center;gap:8px;
+    justify-content:flex-end;opacity:0;transform:translateX(7px);
+    transition:color .2s,opacity .3s ease,transform .3s ease}
+  #rail a.on{opacity:.6;transform:none}             /* typed in */
+  #rail a .t{opacity:0;transition:opacity .2s;letter-spacing:.02em}
+  #rail a:hover,#rail a.active{opacity:1;color:var(--accent)}
+  #rail a:hover .t,#rail a.active .t{opacity:1}
+  #rail a .n .car{opacity:.55}                       /* typing caret on the digits */
+  #rail a .dot{width:6px;height:6px;border-radius:50%;background:#2a322f;
+    transform:scale(0);transition:transform .25s ease}
+  #rail a.on .dot{transform:scale(1)}
+  #rail a.active .dot{background:var(--accent)}
+
+  /* ===== CRT overlays (hero only) ===== */
+  #scan{pointer-events:none;position:absolute;inset:0;z-index:50;opacity:.28;
+    background:repeating-linear-gradient(to bottom,rgba(200,210,205,.015) 0 1px,rgba(0,0,0,0) 1px 3px)}
+  #vig{pointer-events:none;position:absolute;inset:0;z-index:49;
+    background:radial-gradient(125% 125% at 50% 42%,rgba(0,0,0,0) 66%,rgba(0,0,0,.4) 100%)}
+
+  /* ===== top loading bar (coding-in-progress) ===== */
+  #loadbar{position:fixed;top:0;left:0;height:2px;width:0;z-index:90;background:var(--accent);
+    box-shadow:0 0 8px rgba(220,213,195,.55);transition:width .15s linear,opacity .6s ease}
+
+  /* ===== chips / theme cards / sticky nav / hero meta ===== */
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+  .chip{font-family:var(--kfont);font-size:13.5px;color:#cfc8b6;border:1px solid #232a28;
+    border-radius:999px;padding:7px 14px;background:rgba(255,255,255,.012)}
+  .chip b{color:var(--hi);font-weight:700;margin-right:5px}
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px}
+  .fld{display:flex;gap:18px;align-items:center;border:1px solid #232a28;border-radius:14px;
+    padding:22px 24px;background:rgba(255,255,255,.015)}
+  .fld .no{flex:0 0 auto;font-family:"Cascadia Code",monospace;font-size:30px;font-weight:600;color:var(--accent)}
+  .fld b{display:block;font-family:var(--kfont);color:var(--hi);font-weight:800;font-size:23px;margin-bottom:5px}
+  .fld .sub{font-family:var(--kfont);color:#9aa39b;font-size:14px}
+  .themes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:6px}
+  .themes .th{border:1px solid #1a2124;border-radius:12px;padding:18px 20px;background:rgba(255,255,255,.012)}
+  .themes .th b{display:block;font-family:var(--kfont);color:var(--hi);font-weight:800;font-size:17px;margin-bottom:7px}
+  .themes .th span{font-family:var(--kfont);color:#9aa39b;font-size:13.5px;line-height:1.55}
+  .barnav{display:flex;gap:16px;margin-left:18px}
+  .barnav a{font-family:var(--kfont);color:var(--dim);text-decoration:none;font-size:13px}
+  .barnav a:hover{color:var(--accent)}
+  #heroMeta{font-family:"Cascadia Code",monospace;color:var(--accent);font-size:13px;
+    margin-top:16px;min-height:1.25em;opacity:0;transition:opacity .6s ease;letter-spacing:.02em}
+  #heroCta{position:relative;display:flex;gap:12px;margin-top:18px;opacity:0;transition:opacity .6s ease}
+  #heroCta .pb{position:absolute;left:-20px;top:50%;transform:translateY(-50%);
+    color:var(--accent);font-family:"Cascadia Code",monospace;font-size:14px;
+    opacity:0;transition:opacity .3s ease;pointer-events:none}
+  #heroCta .pb.on{opacity:.9;animation:blink 1s steps(1) infinite}
+  #heroCta .btn{opacity:0;white-space:nowrap;transition:opacity .3s ease}
+  #heroCta .btn.on{opacity:1}
+  #heroCta .btn .ic{transition:opacity .25s ease}
+  #heroOrg{font-family:var(--kfont);color:var(--dim);font-size:12px;margin-top:14px;
+    min-height:1.4em;opacity:0;transition:opacity .6s ease}
+  #hero.show #heroMeta,#hero.show #heroCta,#hero.show #heroOrg{opacity:1}
+
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+
+  @media (max-width:900px){
+    #stage{grid-template-columns:1fr;grid-template-rows:34% 66%}
+    #codepane{border-bottom:1px solid #14181c;padding-bottom:16px}
+    #hero{padding:0 0 30px 24px;max-width:92%}
+    #rail{display:none}
+  }
+  @media (max-width:760px){
+    section{padding:64px 18px}
+    .sched-grid{grid-template-columns:1fr}
+    .log .row{grid-template-columns:24px 1fr;gap:10px}
+    .log .date{grid-column:2}
+    .prize-row{grid-template-columns:1fr}
+    .galleryStrip{grid-template-columns:repeat(2,1fr)}
+    .steps3{grid-template-columns:1fr}
+    .steps3 li:not(:last-child)::after{content:"↓";right:auto;left:50%;top:auto;bottom:-12px;transform:translateX(-50%)}
+    .spec .srow{grid-template-columns:1fr;gap:3px}
+    .fields{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .cursor,#heroTitle .hc,#scrollcue,#heroCta .pb{animation:none}
+    #heroCta .btn,#heroCta .pb{transition:none}
+    .reveal{opacity:1;transform:none;transition:none} html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+  <div id="loadbar"></div>
+  <!-- ===== HERO ===== -->
+  <div id="app">
+    <div id="stage">
+      <div class="pane" id="codepane"><div id="gutter">1</div><div id="code"></div></div>
+      <div class="pane" id="artpane">
+        <div id="artstage">
+          <canvas id="art"></canvas>
+          <div id="modeToggle" role="button" tabindex="0" aria-label="색상/모노 전환" title="색/모노 전환 (M)">
+            <span data-mode="color">COLOR</span><span class="sep">·</span><span data-mode="mono">MONO</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="scan"></div>
+    <div id="vig"></div>
+    <div id="scrim"></div>
+    <div id="hero">
+      <div id="heroTag"></div>
+      <div id="heroTitle"></div>
+      <div id="heroMeta"></div>
+      <div id="heroCta">
+        <span class="pb" aria-hidden="true">▸</span>
+        <a class="btn apply" href="#" target="_blank" rel="noopener"><span class="lbl">지원하기</span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></a>
+        <a class="btn ghost" href="#about"><span class="lbl">자세히 보기</span></a>
+      </div>
+      <div id="heroOrg">주최 · 주관 사단법인 한국창조미술협회</div>
+    </div>
+    <a id="scrollcue" href="#about"><span>SCROLL</span><span>▼</span></a>
+  </div>
+
+  <!-- ===== STICKY BAR ===== -->
+  <nav id="bar" aria-label="상단 바">
+    <span class="brand">AI 창조공모대전</span>
+    <nav class="barnav" aria-label="섹션 이동">
+      <a href="#about">개요</a><a href="#schedule">일정</a><a href="#prizes">시상</a><a href="#submit">제출</a>
+    </nav>
+    <span class="dday"><b id="ddayVal">D-—</b> · 접수마감 <span id="ddayDate">11.29</span></span>
+    <a class="btn sm apply" href="#" target="_blank" rel="noopener">지원하기<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></a>
+  </nav>
+
+  <main>
+    <!-- 01 개요 -->
+    <section id="about"><div class="wrap">
+      <div class="sec-label reveal typ" data-cmd="art@artFORM:~$ cat about.md"></div>
+      <h2 class="sec-title reveal dec" data-text="AI로, 새로운 창작을">AI로, 새로운 창작을</h2>
+      <p class="lead reveal"><b class="em">AI 이미지·영상으로 ‘우리가 꿈꾸는 세상’을 그리는 전국 공모전.</b>
+        초·중·고부터 일반까지 누구나, 인공지능을 도구 삼아 자신의 시선을 보여주세요.</p>
+      <p class="lead reveal" style="margin-top:14px">
+        제2회 2026 대한민국 AI 창조공모대전은 AI 창작이 활발해지는 시대 속에서
+        새로운 창작의 가능성을 조명하고자 기획되었습니다. 인간의 감성과 AI의 창의적
+        도구가 만나는 표현을 소개하며 예술의 영역을 확장합니다.</p>
+
+      <div class="subhead reveal">대주제 — 우리가 꿈꾸는 세상</div>
+      <div class="themes reveal">
+        <div class="th"><b>지속가능한 우리의 세상</b><span>지속가능성 · ESG · 생태보호 · 친환경 사회 · SDGs · 재생에너지</span></div>
+        <div class="th"><b>한국의 멋</b><span>K-컬처 · 한국적 정체성 · 전통과 현대의 결합</span></div>
+        <div class="th"><b>내가 꿈꾸는 내일</b><span>미래 자화상 · 일상의 행복 · 미래 직업</span></div>
+      </div>
+
+      <div class="subhead reveal">지원 대상</div>
+      <div class="chips reveal">
+        <span class="chip"><b>학생부</b>초·중·고등학생</span>
+        <span class="chip"><b>대학생부</b>대학생·대학원생</span>
+        <span class="chip"><b>일반부</b>대한민국 국민(성인)</span>
+      </div>
+    </div></section>
+
+    <!-- 02 일정 및 장소 -->
+    <section id="schedule"><div class="wrap">
+      <div class="sec-label reveal typ" data-cmd="art@artFORM:~$ ./schedule --status"></div>
+      <h2 class="sec-title reveal dec" data-text="일정 및 장소">일정 및 장소</h2>
+      <div class="sched-grid">
+        <div class="reveal">
+          <div class="subhead" style="margin-top:0">일정</div>
+          <div class="sbox"><div class="log" id="scheduleLog"></div></div>
+        </div>
+        <div class="reveal">
+          <div class="subhead" style="margin-top:0">장소</div>
+          <div class="sbox">
+            <div class="mapblock">
+              <iframe title="갤러리 라메르 위치" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+                src="https://www.google.com/maps?q=갤러리 라메르 인사동&z=16&hl=ko&output=embed"></iframe>
+            </div>
+            <div class="addr">
+              <b>갤러리 라메르</b> · 2F (수상작 전시 · 시상식)<br>
+              서울특별시 종로구 인사동5길 26
+              <a href="https://www.google.com/maps/search/?api=1&query=갤러리 라메르 인사동" target="_blank" rel="noopener">지도에서 보기 →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div></section>
+
+    <!-- 04 시상 -->
+    <section id="prizes"><div class="wrap">
+      <div class="sec-label reveal typ" data-cmd="art@artFORM:~$ cat prizes.md"></div>
+      <h2 class="sec-title reveal dec" data-text="시상">시상</h2>
+      <div class="pool reveal" id="poolLine"></div>
+      <div class="reveal" id="prizeArea"></div>
+      <p class="lead reveal muted" style="margin-top:16px">※ 우수·특별·장려상 인원은 요강상 미정(추후 공지)입니다.</p>
+    </div></section>
+
+    <!-- 05 제출 방법 -->
+    <section id="submit"><div class="wrap">
+      <div class="sec-label reveal typ" data-cmd="art@artFORM:~$ cat submit.md"></div>
+      <h2 class="sec-title reveal dec" data-text="공모 분야 · 제출">공모 분야 · 제출</h2>
+      <p class="lead reveal"><span class="em">AI 이미지</span> 또는 <span class="em">AI 영상</span>으로 출품하세요. 지원서 작성 → 작품 업로드 → 제출 완료, 3단계입니다.</p>
+
+      <ol class="steps3 reveal">
+        <li><span class="num">1</span><div>
+          <b><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>지원서 작성</b>
+          <span class="t">구글폼에 기본 정보와 출품 분야(이미지/영상)를 입력합니다.</span></div></li>
+        <li><span class="num">2</span><div>
+          <b><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>작품 업로드</b>
+          <span class="t">규격에 맞춰 작품과 함께 사용 AI 툴·프롬프트·제작 기록을 첨부합니다.</span></div></li>
+        <li><span class="num">3</span><div>
+          <b><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="M22 4 12 14.1l-3-3"/></svg>접수 완료</b>
+          <span class="t">접수 기간(11.25~11.29) 안에 제출하면 1차 예선 접수가 완료됩니다.</span></div></li>
+      </ol>
+
+      <div class="subhead reveal">공모 분야 — 2개 부문</div>
+      <div class="fields reveal">
+        <div class="fld"><span class="no">01</span><div><b>AI 이미지</b><span class="sub">정지 이미지 · 비율 1:1 · 5:7 · 7:5</span></div></div>
+        <div class="fld"><span class="no">02</span><div><b>AI 영상</b><span class="sub">숏폼 1분 내외 · 일반 3분 이내</span></div></div>
+      </div>
+
+      <div class="subhead reveal">제출 규격</div>
+      <div class="spec reveal">
+        <div class="srow"><span class="sk">AI 이미지</span><span class="sv">비율 1:1 · 5:7 · 7:5 중 선택 · JPG/PNG(300dpi 이상) · 30MB 이하</span></div>
+        <div class="srow"><span class="sk">AI 영상</span><span class="sv">FHD 1080×1920 이상 · MP4 권장(MOV·AVI) · 숏폼 1분 내외(9:16) 또는 일반 3분 이내(16:9)</span></div>
+        <div class="srow"><span class="sk">제출 자료</span><span class="sv">작품 정보(양식) · 작품 이미지 · 영상(업로드 또는 링크)</span></div>
+        <div class="srow"><span class="sk">필수 첨부</span><span class="sv">사용 AI 툴 · 프롬프트 · AI 제작 기록 (구글폼)</span></div>
+      </div>
+
+      <div class="subhead reveal">유의사항</div>
+      <ul class="checklist reveal">
+        <li>2026년 1월 이후 제작한 작품이어야 합니다.</li>
+        <li>사용 AI 툴·프롬프트·제작 기록을 반드시 첨부해야 합니다.</li>
+        <li>표절·타 공모전 입상작은 수상이 취소되며 상장·부상을 반환합니다.</li>
+      </ul>
+
+    </div></section>
+
+    <!-- 05 지원하기 -->
+    <section id="apply"><div class="wrap">
+      <div class="sec-label reveal typ" data-cmd="art@artFORM:~$ ./apply" style="text-align:center"></div>
+      <h2 class="sec-title reveal dec" data-text="지금 지원하세요">지금 지원하세요</h2>
+      <div id="countdown" class="reveal">—</div>
+      <div class="deadline reveal">접수 마감 <b id="ddayDate2">2026.11.29</b></div>
+      <div class="applybtns reveal">
+        <a class="btn apply" href="#" target="_blank" rel="noopener">지원서 작성 (구글폼)<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></a>
+        <a class="btn ghost" href="guideline.pdf" target="_blank" rel="noopener">요강 PDF<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg></a>
+      </div>
+      <div id="applyNote" aria-live="polite"></div>
+    </div></section>
+  </main>
+
+  <footer><div class="wrap">
+    <span class="org">주최 · 주관 <b style="color:var(--ink)">사단법인 한국창조미술협회</b><br>
+      <span style="color:var(--dim);font-size:12px">서울시 종로구 삼일대로 32길 36, B108호 (익선동, 운현신화타워)</span></span>
+    <span><svg class="ic im" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.5 2.1L8 11a16 16 0 0 0 6 6l1.6-1.2a2 2 0 0 1 2.1-.5c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z"/></svg><a href="tel:0227455092">02-745-5092</a> · <a class="apply" href="#" target="_blank" rel="noopener">지원하기</a></span>
+    <span>© 2026 대한민국 AI 창조공모대전</span>
+  </div></footer>
+
+  <div id="tip"></div>
+  <div id="codebox"></div>
+
+  <script src="paintings.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
