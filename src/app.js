@@ -33,7 +33,7 @@ const CONFIG = {
     {rank:"MERIT",   name:"장려상",   amount:"상품권 10만원",  award:"상장", count:"○명"},
     {rank:"SELECT",  name:"특선 · 입선", amount:"상장",        award:"",     count:"다수"},
   ],
-  codeCps: 70, firstCps: 165, holdMs: 4600, firstHoldMs: 900, maxLines: 240, scatter: 0.30,
+  codeCps: 70, firstCps: 220, holdMs: 4600, firstHoldMs: 900, maxLines: 240, scatter: 0.30,
   bleed: 0.99, viewX: 57, viewY: 58,     // image size & position (from ADJUST)
   defaultMode: "color",
   typos: true, flicker: true, imgBackspace: true, speed: 1,
