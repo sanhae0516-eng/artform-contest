@@ -130,13 +130,18 @@ function buildOrder(){
   cells.sort((a,b)=>a[2]-b[2]); ORDER=cells.map(x=>[x[0],x[1]]);
 }
 function colorAt(id,r,c){ return (mode==="mono"||!colorGrids[id])?MONO_COL:colorGrids[id][r*COLS+c]; }
-function clearCell(r,c){ ctx.fillStyle=BG; ctx.fillRect(OX+c*CELLW,OY+r*CELLH,CELLW+0.8,CELLH+0.6); }
+let ART_TRANSPARENT=false;   // phone: clear canvas to transparent so the faint code background shows through
+function clearCell(r,c){
+  if(ART_TRANSPARENT){ ctx.clearRect(OX+c*CELLW,OY+r*CELLH,CELLW+0.8,CELLH+0.6); return; }
+  ctx.fillStyle=BG; ctx.fillRect(OX+c*CELLW,OY+r*CELLH,CELLW+0.8,CELLH+0.6); }
 function drawCell(id,r,c){ const ch=charGrids[id][r][c]; clearCell(r,c);
   if(ch!==" "){ ctx.fillStyle=colorAt(id,r,c); ctx.fillText(ch,OX+c*CELLW,OY+r*CELLH); } }
 function drawCellHot(id,r,c){ const ch=charGrids[id][r][c]; clearCell(r,c);
   if(ch!==" "){ ctx.fillStyle=HOT_COL; ctx.fillText(ch,OX+c*CELLW,OY+r*CELLH); } }
 function redrawFull(id){
-  ctx.fillStyle=BG; ctx.fillRect(0,0,elCanvas.width,elCanvas.height); repBox=null;
+  if(ART_TRANSPARENT) ctx.clearRect(0,0,elCanvas.width,elCanvas.height);
+  else { ctx.fillStyle=BG; ctx.fillRect(0,0,elCanvas.width,elCanvas.height); }
+  repBox=null;
   if(!id||!charGrids[id]) return;
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) drawCell(id,r,c);
 }
@@ -145,6 +150,7 @@ function measureRatio(){ ctx.font='100px "Cascadia Code", ui-monospace, monospac
 function fit(){
   const pane=$("artstage"), pw=pane.clientWidth, ph=pane.clientHeight;
   const narrow=pw<720;
+  ART_TRANSPARENT = pw<=600;                         // phone: painting floats over the faint code background
   const baseFS = narrow
     ? Math.min(pw/(COLS*CHAR_RATIO), ph/ROWS)*0.99   // phone: CONTAIN, full width (painting is the main element)
     : Math.max(pw/(COLS*CHAR_RATIO), ph/ROWS);       // desktop: COVER — full bleed
@@ -154,7 +160,7 @@ function fit(){
   elCanvas.style.width=pw+"px"; elCanvas.style.height=ph+"px";
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.font=`${FS}px "Cascadia Code", ui-monospace, monospace`; ctx.textBaseline="top";
-  if(narrow){ OX=(pw-gw)/2; OY=(ph-gh)*0.10; }  // phone: near the top of the art row so it clears the title
+  if(narrow){ OX=(pw-gw)/2; OY=(ph-gh)*(ART_TRANSPARENT?0.24:0.10); }  // phone: float in upper-mid over code bg; tablet: top of the art row
   else { OX=(pw-gw)+view.ox; OY=0+view.oy; }      // desktop: right/top-aligned + baked offset
   redrawFull(displayId);
 }
