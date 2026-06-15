@@ -151,8 +151,8 @@ function fit(){
   elCanvas.style.width=pw+"px"; elCanvas.style.height=ph+"px";
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.font=`${FS}px "Cascadia Code", ui-monospace, monospace`; ctx.textBaseline="top";
-  OX=(pw-gw)+view.ox;     // right-aligned, then user offset
-  OY=0+view.oy;           // top-aligned,  then user offset
+  if(pw<720){ OX=(pw-gw)/2; OY=(ph-gh)/2; }   // narrow/phone: center the crop (keep bleed)
+  else { OX=(pw-gw)+view.ox; OY=0+view.oy; }   // desktop: right/top-aligned + baked offset
   redrawFull(displayId);
 }
 
@@ -346,6 +346,7 @@ function updateToggleUI(){ elToggle.querySelectorAll("span[data-mode]").forEach(
   s.classList.toggle("active", s.dataset.mode===mode)); }
 function setMode(m){ mode=m; localStorage.setItem("artmode",m); updateToggleUI(); redrawFull(displayId); }
 elToggle.addEventListener("click",()=>setMode(mode==="color"?"mono":"color"));
+elToggle.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setMode(mode==="color"?"mono":"color"); } });
 addEventListener("keydown",e=>{ if(e.key==="m"||e.key==="M") setMode(mode==="color"?"mono":"color"); });
 
 /* ---------- source + snippets (substantial blocks per cycle) ---------- */
@@ -677,9 +678,11 @@ function setupSections(){
   document.querySelectorAll("a.apply").forEach(a=>{
     if(APPLY.msg){                                   // 접수 전/후 → 비활성화
       a.classList.add("disabled"); a.setAttribute("aria-disabled","true");
+      a.setAttribute("aria-label", (a.textContent||"지원").trim()+" — "+APPLY.note);
       a.removeAttribute("href"); a.removeAttribute("target");
-      a.addEventListener("click", ev=>ev.preventDefault());
-      a.addEventListener("mousemove", e=>applyWarn(e));   // 어느 위치의 지원버튼이든 빨간 안내
+      a.addEventListener("click", ev=>{ ev.preventDefault(); applyWarn(ev);   // 터치: 탭하면 빨간 안내가 잠깐 표시
+        clearTimeout(a._wt); a._wt=setTimeout(()=>{ elTip.style.opacity="0"; elTip.classList.remove("warn"); }, 2600); });
+      a.addEventListener("mousemove", e=>applyWarn(e));   // 데스크탑: 호버 안내
       a.addEventListener("mouseleave", ()=>{ elTip.style.opacity="0"; elTip.classList.remove("warn"); });
     } else {
       a.href=CONFIG.applyUrl;
@@ -718,7 +721,11 @@ async function main(){
   }
   buildChars(list); measureRatio(); buildOrder(); fit(); preloadColors(list);
   addEventListener("resize", fit); addPointer(); updateToggleUI(); setupSections();
-  lockScroll();                            // no scroll until 1st painting is built
+  const REDUCE = window.matchMedia && matchMedia("(prefers-reduced-motion:reduce)").matches;
+  if(!REDUCE) lockScroll();                 // lock scroll until 1st painting is built (motion users)
+  setTimeout(releaseIntro, 4000);           // safety: never trap the user if the build is slow
+  addEventListener("touchstart", releaseIntro, {once:true, passive:true});  // tap anywhere to skip on touch
+  if(REDUCE) releaseIntro();                // reduced-motion: start unlocked
   redrawFull(null); await sleep(350);      // brief empty terminal
   typeHero();
   let count=0;
@@ -727,7 +734,7 @@ async function main(){
     const snip=(count===0?BASE_SRC:"")+snippet(p,count+1); count++;
     if(i===0) await typeFrame(p, snip, CONFIG.firstCps, setLoad);   // fast first build + top bar
     else      await typeFrame(p, snip);
-    if(i===0){ finishLoad(); unlockScroll(); revealRail(); }   // first coding done → scroll + rail in
+    if(i===0) releaseIntro();   // first coding done → unlock + reveal (guarded; may already be released)
     trimCode(CONFIG.maxLines);
     // 로딩이 길었던 첫 이미지는 짧게만 머문 뒤 곧장 다음 그림으로 한 번 전환
     await holdAlive(p.id, i===0 ? CONFIG.firstHoldMs : CONFIG.holdMs);
@@ -740,4 +747,6 @@ function finishLoad(){ if(!elLoad) return; elLoad.style.width="100%";
 function lockScroll(){ window.scrollTo(0,0); document.documentElement.classList.add("locked"); }
 function unlockScroll(){ document.documentElement.classList.remove("locked");
   const c=$("scrollcue"); if(c) c.style.opacity="1"; }
+let _released=false;
+function releaseIntro(){ if(_released) return; _released=true; finishLoad(); unlockScroll(); revealRail(); }
 document.addEventListener("DOMContentLoaded", main);
