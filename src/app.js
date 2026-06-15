@@ -154,7 +154,7 @@ function fit(){
   elCanvas.style.width=pw+"px"; elCanvas.style.height=ph+"px";
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.font=`${FS}px "Cascadia Code", ui-monospace, monospace`; ctx.textBaseline="top";
-  if(narrow){ OX=(pw-gw)/2; OY=(ph-gh)*0.42; }  // phone: centered in the art row (just below the code, above the title)
+  if(narrow){ OX=(pw-gw)/2; OY=(ph-gh)*0.10; }  // phone: near the top of the art row so it clears the title
   else { OX=(pw-gw)+view.ox; OY=0+view.oy; }      // desktop: right/top-aligned + baked offset
   redrawFull(displayId);
 }
