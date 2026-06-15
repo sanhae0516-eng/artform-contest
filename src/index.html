@@ -336,7 +336,8 @@
     .sched-grid{grid-template-columns:1fr}
     .log .row{grid-template-columns:22px 1fr;gap:10px}
     .log .date{grid-column:2}
-    .prize-row{grid-template-columns:1fr}
+    .log .lab{grid-column:2}              /* keep label in col 2 (was falling into the 22px dot column) */
+    .prize-row{grid-template-columns:repeat(2,1fr);gap:12px}
     .themes{grid-template-columns:1fr}
     .galleryStrip{grid-template-columns:repeat(2,1fr)}
     .steps3{grid-template-columns:1fr}
